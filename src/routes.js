@@ -8,6 +8,7 @@ import UserController from './app/controllers/UserController';
 import FileController from './app/controllers/FileController';
 import CollaboratorController from './app/controllers/CollaboratorController';
 import AppointmentController from './app/controllers/AppointmentController';
+import ScheduleController from './app/controllers/ScheduleController';
 
 import authMiddleware from './app/middlewares/auth';
 
@@ -30,6 +31,8 @@ routes.get('/appointments', AppointmentController.index);
 // Lista todos os colaboradores
 routes.get('/collaborator', CollaboratorController.index);
 
+// listagem de agendamentos colaborador
+routes.get('/schedule', ScheduleController.index);
 
 // Upload de arquivos
 routes.post('/files', upload.single('file'), FileController.store);
