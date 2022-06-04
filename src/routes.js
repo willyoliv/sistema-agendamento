@@ -7,6 +7,7 @@ import SessionController from './app/controllers/SessionController';
 import UserController from './app/controllers/UserController';
 import FileController from './app/controllers/FileController';
 import CollaboratorController from './app/controllers/CollaboratorController';
+import AppointmentController from './app/controllers/AppointmentController';
 
 import authMiddleware from './app/middlewares/auth';
 
@@ -19,6 +20,9 @@ routes.post('/session', SessionController.store);
 // Rotas autenticadas
 routes.use(authMiddleware);
 routes.put('/users', UserController.updade);
+
+// Rota de agendamento 
+routes.post('/appointments', AppointmentController.store);
 
 // Lista todos os colaboradores
 routes.get('/collaborator', CollaboratorController.index);
