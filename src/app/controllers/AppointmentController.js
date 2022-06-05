@@ -1,9 +1,12 @@
-import * as Yup from 'yup';
-import { startOfHour, parseISO, isBefore } from 'date-fns';
+import * as Yup from "yup";
+import { startOfHour, parseISO, isBefore, format } from "date-fns";
+import pt from "date-fns/locale/pt-BR";
 
-import Appointment from '../models/Appointment';
-import User from '../models/User';
-import File from '../models/File';
+import Appointment from "../models/Appointment";
+import User from "../models/User";
+import File from "../models/File";
+
+import Notifications from "../schema/Notifications";
 
 class AppointmentController {
   async index(req, res) {
@@ -13,22 +16,26 @@ class AppointmentController {
     const appointments = await Appointment.findAll({
       where: {
         user_id: req.user_id,
-        canceled_at: null
+        canceled_at: null,
       },
-      order: ['date'],
-      attributes: ['id', 'date'],
+      order: ["date"],
+      attributes: ["id", "date"],
       limit: 20,
       offset: (page - 1) * 20,
-      include: [{
-        model: User,
-        as: 'collaborator',
-        attributes: ['id', 'name'],
-        include: [{
-          model: File,
-          as: 'photo',
-          attributes: ['id', 'path', 'url']
-        }]
-      }]
+      include: [
+        {
+          model: User,
+          as: "collaborator",
+          attributes: ["id", "name"],
+          include: [
+            {
+              model: File,
+              as: "photo",
+              attributes: ["id", "path", "url"],
+            },
+          ],
+        },
+      ],
     });
     return res.json(appointments);
   }
@@ -41,7 +48,7 @@ class AppointmentController {
 
     if (!(await schema.isValid(req.body))) {
       return res.status(400).json({
-        err: 'Inválido'
+        err: "Inválido",
       });
     }
 
@@ -49,14 +56,14 @@ class AppointmentController {
 
     const isCollaborator = await User.findOne({
       where: {
-        id: collaborator_id, 
-        provider: true 
-      }
+        id: collaborator_id,
+        provider: true,
+      },
     });
 
     if (!isCollaborator) {
       return res.status(401).json({
-        err: 'Colaborador não localizado'
+        err: "Colaborador não localizado",
       });
     }
 
@@ -64,7 +71,7 @@ class AppointmentController {
 
     if (isBefore(startHour, new Date())) {
       return res.status(400).json({
-        err: 'Horário não disponível'
+        err: "Horário não disponível",
       });
     }
 
@@ -72,22 +79,32 @@ class AppointmentController {
       where: {
         collaborator_id,
         canceled_at: null,
-        date: startHour
-      }
+        date: startHour,
+      },
     });
 
     if (checkAvaialability) {
       return res.status(400).json({
-        err: 'Horário não disponível, para este colaborador'
+        err: "Horário não disponível, para este colaborador",
       });
     }
 
     const appointment = await Appointment.create({
       user_id: req.user_id,
       collaborator_id,
-      date: startHour
+      date: startHour,
     });
 
+    const user = await User.findByPk(req.user_id);
+
+    const formatDate = format(startHour, "'dia' dd 'de' MMMM', às' H:mm'h' ", {
+      locale: pt,
+    });
+
+    await Notifications.create({
+      content: `Novo agendamento de ${user.name} ${formatDate}`,
+      user: collaborator_id,
+    });
 
     return res.json(appointment);
   }
