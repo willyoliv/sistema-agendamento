@@ -1,5 +1,14 @@
 version: '3.8'
 services:
+  postgresdb:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: sistema
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: docker
+    ports:
+      - "5432:5432"
   mongodb:
     image: mongo
     volumes:
